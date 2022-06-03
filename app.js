@@ -6,13 +6,16 @@ const app = express();
 const fs = require('fs');
 const multer = require('multer');
 const {TesseractWorker} = require('tesseract.js');
-const worker = new TesseractWorker();
+const fileupload = require("express-fileupload");
+app.use(fileupload());
+// const worker = new TesseractWorker();
+// const createWorker = require("tesseract.js");
 
 const storage = multer.diskStorage({
-    destination: (req, file,cb) => {
+    destination: (_req, _file,cb) => {
         cb(null, "./uploads");
-    },s
-    filename: (res, file, cb) => {
+    },
+    filename: (_res, file, cb) => {
         cb(null, file.originalname);
     }
     
@@ -24,35 +27,35 @@ app.set("view engine", "ejs");
 app.use(express.static("public"));
 //Router
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
     res.render("index")
 });
 
 app.post("/upload", (req, res) => {
-    upload(req, res, err => {
+    upload(req, res, _err => {
         fs.readFile(`./uploads/${req.file.originalname}`, (err, Data) => {
             if(err) return console.log('This is your error', err);
 
-            worker
-            .recongnize(Data, "eng", {tessjs_Create_pdf: '1'})
+            createWorker
+            .recongnize(Data, "tam", {tessjs_Create_pdf: '1'})
             .progress(progress => {
                 console.log(progress);
             })
-            .then(result => {
+            .then(_result => {
                 // res.send(result.text);
                 res.redirect('.download')
             })
-            .finally(() => worker.terminate());
+            .finally(() => createWorker.terminate());
         });
     });
 });
 
-app.get('/download', (req,res) => {
+app.get('/download', (_req,res) => {
     const file = `${__dirname}/tesseract.js-ocr-result.pdf`;
     res.download(file)
 })
 
-const PORT = 5000 || process.env.PORT;
-app.listen(PORT, () => console.log('Hey Im running on port ${PORT}'));
+const PORT = 4000 || process.env.PORT;
+app.listen(PORT, () => console.log(`Hey Im running on port ${PORT}`));
 
 
